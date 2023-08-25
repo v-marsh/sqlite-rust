@@ -1,3 +1,3 @@
 pub mod user_io;
 pub mod commands;
-pub mod pager;
+pub mod page;
