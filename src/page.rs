@@ -41,7 +41,7 @@ impl Page {
             if buffer.is_null() {
                 return Err(PageAllocationError::MemoryAllocationError);
             } else {
-                return Ok(Self {buffer, layout});
+                return Ok(Self { buffer, layout });
             }           
         }
     }
@@ -68,7 +68,10 @@ impl Page {
             );
         }
         unsafe {
-            ptr::copy_nonoverlapping(src.as_ptr(), self.buffer, src.len())
+            ptr::copy_nonoverlapping(
+                src.as_ptr(), 
+                self.buffer.offset(loc as isize), src.len()
+            )
         }
     }
 
@@ -88,7 +91,10 @@ impl Page {
         }
         let mut output = vec![0; count];
         unsafe {
-            ptr::copy_nonoverlapping(self.buffer.add(loc), output.as_mut_ptr(), count);
+            ptr::copy_nonoverlapping(
+                self.buffer.offset(loc as isize), 
+                output.as_mut_ptr(), count
+            );
         }
         Some(output.into_boxed_slice())
     }

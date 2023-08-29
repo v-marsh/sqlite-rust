@@ -1,4 +1,7 @@
 use std::process;
+use crate::table;
+
+const max_string_len: usize = 100;
 
 pub enum ExitStatus {
     Success = 0,
@@ -6,7 +9,7 @@ pub enum ExitStatus {
 }
 
 pub enum StatementType {
-    Insert(InsertContents),
+    Insert(table::Row),
     Select,
 }
 
@@ -40,10 +43,10 @@ pub fn prepare_statement(line: &str) -> Result<StatementType, String> {
             .split(' ')
             .count();
         if columns != 4 {print_error(line)}
-        let mut contents = InsertContents::new();
+        let mut contents = table::Row::with_max_str_len(max_string_len);
         let mut elements = line.split(' ').skip(1);
         match elements.next().unwrap().parse::<usize>() {
-            Ok(value) => contents.id = value,
+            Ok(value) => contents.id = Some(value),
             Err(_) => print_error(line),
         }
         contents.username = String::from(elements.next().unwrap());
@@ -57,9 +60,18 @@ pub fn prepare_statement(line: &str) -> Result<StatementType, String> {
 }
 
 
-pub fn execute_statement(statement: StatementType) {
+pub fn execute_statement(statement: StatementType, table: &mut table::Table) {
     match statement {
-        StatementType::Insert(_) => println!("This is where to insert"),
-        StatementType::Select => println!("This is where to select")
+        StatementType::Insert(contents) => {
+            table.push(&contents.serialise().unwrap())
+        },
+        StatementType::Select => {
+            for i in 0..table.len() {
+                let row = table.get(i, max_string_len).unwrap();
+                println!(
+                    "({}, {}, {})", row.id.unwrap(), row.username, row.email
+                );
+            }
+        }
     };
 }
